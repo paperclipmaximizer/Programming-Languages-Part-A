@@ -1,0 +1,23 @@
+Standard ML of New Jersey v110.79 [built: Mon Oct  3 21:03:45 2022]
+- use "first.sml";
+[opening first.sml]
+val x = 34 : int
+val y = 17 : int
+val it = () : unit
+- x;
+val it = 34 : int
+- x+12;
+val it = 46 : int
+- x+"bool"
+= ;
+stdIn:4.1-4.9 Error: operator and operand don't agree [tycon mismatch]
+  operator domain: int * int
+  operand:         int * string
+  in expression:
+    x + "bool"
+- exit
+= ;
+stdIn:1.2-1.6 Error: unbound variable or constructor: exit
+- 
+
+Process sml finished

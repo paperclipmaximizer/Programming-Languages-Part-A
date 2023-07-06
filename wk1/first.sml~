@@ -1,0 +1,6 @@
+(* comment *)
+
+val x = 34; (* int *)
+
+val y = 17;
+
