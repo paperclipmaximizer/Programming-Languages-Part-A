@@ -52,9 +52,62 @@ fun what_month(day: int): int =
    number_before_reaching_sum(day,[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]) + 1
 				    
 fun month_range (day1: int, day2:int): int list =
-    if day1 < day2
+    if day1 > day2
     then []
-    else what_month(day1) :: month_range(day1 + 1, day2)
-    						 
-fun oldest(dates: date list): date option = NONE
-    
+    else what_month(day1) :: month_range(day1 + 1, day2)					
+
+fun oldest(dates:date list): date option =
+    if   null dates
+    then NONE
+    else
+        let
+            val tl_ans = oldest(tl dates)
+        in
+            if not(isSome tl_ans) orelse is_older(hd dates, valOf tl_ans)
+            then SOME (hd dates)
+            else tl_ans
+        end
+	    
+(* Searchest for x in xs, then if true return xs else cons x xs *)
+fun number_in_months_challenge (dates:date list, months:int list) : int = 
+    if null months
+    then 0
+    else let fun remove (m: int, []:int list) : int list = []
+	       | remove (m: int, month::months:int list): int list =
+		 if m <> month
+		 then month::remove(m, months)
+		 else remove(m, months)
+	 in
+	     number_in_months(dates, hd months::(remove(hd months, tl months)))
+	 end	
+						      
+fun dates_in_months_challenge (dates:date list, []:int list) : date list = [] 
+  | dates_in_months_challenge (dates:date list, month::months:int list) : date list =
+    let fun remove (m: int, []:int list) : int list = []
+	  | remove (m: int, month::months:int list): int list =
+	    if m <> month
+	    then month::remove(m, months)
+	    else remove(m, months)
+    in
+	dates_in_months(dates, hd months::(remove(hd months, tl months)))
+    end
+	
+fun reasonable_date(date:date) : bool =
+   let fun get_nth ([] :int list, n: int):int = 0
+	 | get_nth (s::lst: int list, n: int):int = 
+	   if n = 1
+	   then s
+	   else get_nth(lst, n-1)
+       val feb = if (#1 date mod 400 = 0 orelse
+		     #1 date mod 4 = 0 andalso
+		     #1 date mod 100 <> 0)
+		 then 29
+		 else 28
+   in
+       #1 date > 0 andalso
+       #2 date >= 1 andalso
+       #2 date <= 12 andalso 
+       #3 date >= 1 andalso
+       #3 date <= get_nth([31,feb,31,30,31,30,31,31,30,31,30,31], #2 date)
+   end
+       
