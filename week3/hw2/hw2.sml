@@ -1,7 +1,8 @@
+(* included helper *)
 fun same_string(s1 : string, s2 : string) =
     s1 = s2
 
-(* search for s in list, if found remove s and return SOME(lst) of the new list*)
+(* search for s in list, if found remove s then return SOME(lst) *)
 fun all_except_option (s,xs) =
     case xs of
 	[] => NONE
@@ -12,6 +13,7 @@ fun all_except_option (s,xs) =
 	    case all_except_option(s,xs') of
 		NONE => NONE
 	      | SOME y => SOME(x :: y)
+
 (* check list for s, if x=s then append l*)
 fun get_substitutions1 (xss, s) = 
     case xss of
@@ -20,6 +22,7 @@ fun get_substitutions1 (xss, s) =
 	case all_except_option(s,xs) of
 	    NONE   =>     get_substitutions1(xss,s)
 	  | SOME y => y @ get_substitutions1(xss,s)
+
 (* check list for s, if x=s then append l-s else n-1 list w/ tr helper*)
 fun get_substitutions2 (xss,s) =
     let fun aux (xss,rsf) =
@@ -31,6 +34,7 @@ fun get_substitutions2 (xss,s) =
     in 
 	aux(xss,[])
     end
+
 (* substitute first of fullnames, if #t append middle and last name |    *)
 fun similar_names (xss, fullname) =
     let val {first = f, middle = m, last = l} = fullname
@@ -42,7 +46,7 @@ fun similar_names (xss, fullname) =
 	fullname :: combine(get_substitutions2(xss,f))
     end
 	
-
+(* =============================== Part 2 ======================================== *)
 datatype suit = Clubs | Diamonds | Hearts | Spades
 datatype rank = Jack | Queen | King | Ace | Num of int 
 
@@ -52,7 +56,6 @@ datatype color = Red | Black
 datatype move = Discard of card | Draw 
 
 exception IllegalMove
-(* put your solutions for problem 2 here *)
 
 (* consumes a card with type card, returns the corrs. color ass. with its suit*)
 fun card_color (s, r) =
@@ -81,6 +84,7 @@ fun all_same_color ([]) = true (* card list -> bool *)
   | all_same_color (x::(y::xs)) =
 		    card_color(x) = card_color(y) andalso
 		    all_same_color(y::xs)
+
 (* sums the list of cards be calling card_value recursively *)
 fun sum_cards cs =
     let fun sum (cs,acc) =
@@ -88,7 +92,7 @@ fun sum_cards cs =
 	    []     => acc
 	   |c::cs' => sum (cs', card_value(c) + acc)
     in
-	sum (cs, 0)
+	    sum (cs, 0)
     end
     
 (* if sum(cs) > goal p_score
@@ -98,15 +102,16 @@ fun sum_cards cs =
    -> p_score = p_score div 2,
    else p_score *)
 fun score (hc : card list, g: int): int =
-    let val sum = sum_cards(hc)
-	fun p_score(sum:int): int =
-	    if sum > g
-	    then 3*(sum-g)
-	    else g-sum
+    let 
+        val sum = sum_cards(hc)
+	    fun p_score(sum:int): int =
+	        if sum > g
+	        then 3*(sum-g)
+	        else g-sum
     in 
-	if all_same_color(hc)
-	then p_score(sum) div 2
-	else p_score(sum)
+	    if all_same_color(hc)
+	    then p_score(sum) div 2
+	    else p_score(sum)
     end
 	
  (* helper for officiate *)	
@@ -122,7 +127,7 @@ fun game(_,    hc,   [],            g) = score(hc,g)
 fun officiate (cs: card list, ms, g: int): int =
     game(cs,[],ms,g)
 
-(* Challenge Problems: *)
+(* ========================= Challenge Problems ============================= *)
 	
 (* re-imp of card_value *)
 fun card_value_challenge (s,r) =
@@ -130,22 +135,25 @@ fun card_value_challenge (s,r) =
 	Ace   =>  1
       | Num n =>  n
       | _     => 10
+
 (* re-imp sum_cards *)
 fun sum_cards_challenge [] = 0
   | sum_cards_challenge (x::xs) = card_value_challenge(x) + sum_cards_challenge(xs)
 
 (* score but each ace can have 1 or 11 depending on which is BENEFICIAL ie lower score is always better, tf. Ace = Num 1 *)
 fun score_challenge(hc:card list,g: int): int =
-    let val sum = sum_cards_challenge hc
-	fun p_score(sum:int): int =
-	    if sum > g
-	    then 3*sum-g
-	    else g-sum
+    let 
+        val sum = sum_cards_challenge hc
+	    fun p_score(sum:int): int =
+	        if sum > g
+	        then 3*sum-g
+	        else g-sum
     in 
-	if all_same_color(hc)
-	then p_score(sum) div 2
-	else p_score(sum)
+	    if all_same_color(hc)
+	    then p_score(sum) div 2
+	    else p_score(sum)
     end
+
 (* game with added game-ends-if-sum-exceeds-goal condition *)		
 fun game_challenge (_,    hc,   [],            g) = score_challenge(hc,g)
   | game_challenge (cs,   hc,  (Discard c)::ms,g) = game (cs,remove_card(hc,c,IllegalMove),ms,g)
@@ -156,53 +164,50 @@ fun game_challenge (_,    hc,   [],            g) = score_challenge(hc,g)
     else score_challenge     (c::hc,g)
     
 (* re-imp w/ game-ends-if-sum-exceeds-goal rule *)
-fun officiate_challenge (cs: card list, ms, g: int): int =
+fun officiate_challenge (cs, ms, g) =
     game(cs,[],ms,g)
 
-(* genrec, arb-arity tree filtered for conditions NOTE: this is not a continuation of previous problem, this function conforms to the regular functions above. *)
-(* 1. sum(hc) != g
-   2. if 10+sum(hc) < g
-   3. score = 0, ms must = 0 ORELSE Discard (c)::ms ANDALSO next-c = 0 *)
- 
-fun careful_player (deck, goal): move list =
-    let	fun play (d::deck,h::hand,moves) =
-	(* score = 0  *)
-    if score(h::hand,goal) = 0
-    then moves
-    else
-	(* must draw(once) if g > 10 > score *)
-    if sum_cards(h::hand) < goal+10 
-    then play(deck, d::h::hand, Draw::moves)
-    else
-	(* discard + draw  *)
-    if discard_draw_possible(d,h::hand,goal)
-    then discard_draw(deck,hand,Draw::Discard(d)::moves)
-    else 
-    in
-	play(deck,[],[])
+fun map (_, [])    = []
+  | map (f, x::xs) = f(x)::map(f, xs)
+
+(* arb-arity of x::xs choices *)
+fun all_moves (deck) =
+    let 
+        fun aux ([],      wla, wlb) = wla
+          | aux (d::deck, wla, wlb) =
+        let 
+            val wlc  = map(fn w => w@[Draw], wlb) @ 
+                       map(fn w => w@[Draw,Discard d], wlb)
+        in
+            aux (deck, wla@wlc, wlc)
+        end
+    in 
+        aux (deck,[[]],[[]])
     end
-(*
-fun careful_player (cs: card list,g: int): move list =
-    (* CASE: quit *)
-    (* IFF score = 0 *)
-    let fun play (deck,held,moveset,goal) =
-	    score(held, goal) = 0
-	  (* CASE: Draw *)
-	  (* IFF goal > 10 > sum_cards(held) *) 
-	  | play (deck, held, Draw::moveset, goal) = 
-	    goal > 10 > sum_cards(held)
-	  (* CASE: Discard (one ahead) *)
-	  | play (deck, held, Discard(c)::moveset, goal) =
-	    score (tl held,goal) = 0
-	  (* CASE: Discard then Pickup to win (2 ahead) *)
-	  | play (deck), remove_card(hd,hd::held),Draw::Discard(c)::moveset,goal) =
-	    let val next_play =
-		    score (tl held,goal) = 0
-	    in
-		next_play = true
-	    end
-	    
+
+(* re-imp of officiate + game *)
+fun careful_player(deck, g) =
+    let 
+        fun next_hand (_, [], hand)              = SOME hand
+        |   next_hand (c::deck,Draw::moves,hand) =
+        (case g > sum_cards(hand) + 10 of
+           true   => next_hand(deck,moves,c::hand)
+           | _    => NONE)
+        |   next_hand (deck,(Discard c)::moves,hand) =
+            next_hand (deck,moves,remove_card(hand, c,IllegalMove))
+(* iterates through a list of moves comparing last moveset with next best move set. Best means less score *)
+        fun next_moves ([], moves, _)             = moves
+        |   next_moves (ms::mslist, moves, p_score) =
+            case next_hand (deck, ms, []) of
+                SOME hand => 
+                let 
+                    val n_score = score(hand, g)
+                in
+                    if   p_score > n_score
+                    then next_moves (mslist, ms, n_score)
+                    else next_moves (mslist, moves, p_score)
+                end
+              | NONE =>  next_moves(mslist, moves, p_score)
     in
-	play (cs, [], [], g)
+        next_moves(all_moves(deck),[],score([],g))
     end
-*)
